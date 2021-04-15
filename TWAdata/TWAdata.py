@@ -94,3 +94,40 @@ class TWAdata():
         '''
         return self._raw_data
         
+    def cable_calib(self, cable, fMHz):
+        '''
+        Provides calibration coefficients for a cable.
+        The coefficients are loss/gain and phase.
+        The loss is retuned as positive, i.e. a gain.
+        
+        Parameters
+        ----------
+        cable : str
+            cable name.
+        fMHz : float
+            frequency in [MHz].
+
+        Returns
+        -------
+        tuple with loss and phase at the given fMHz.
+
+        '''
+        loss={'cable_1':{'a':-0.006880,'b':-0.2925},
+              'cable_2':{'a':-0.006925,'b':-0.2946},
+              'cable_3':{'a':-0.007031,'b':-0.3093},
+              'cable_4':{'a':-0.008467,'b':-0.3984},
+              'cable_5':{'a':-0.008295,'b':-0.3969},
+              'cable_6':{'a':-0.009292,'b':-0.3934},}
+
+        phase={'cable_1':{'a':-5.075995,'b':357.665306},
+               'cable_2':{'a':-5.067552,'b':357.572827},
+               'cable_3':{'a':-5.073765,'b':357.553137},
+               'cable_4':{'a':-6.660815,'b':357.220690},
+               'cable_5':{'a':-6.634197,'b':357.173558},
+               'cable_6':{'a':-7.059244,'b':357.081008},}
+        
+        cable_loss = loss[cable]['a'] * fMHz + loss[cable]['b']
+        cable_phase = phase[cable]['a'] * fMHz + phase[cable]['b']
+        
+        return (-cable_loss,cable_phase)
+        
