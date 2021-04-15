@@ -65,6 +65,7 @@ class TWAdata():
             self.raw_Piout_to_Piout()
             self.raw_Pgen_to_Pgen()
             self.raw_Tc_to_Tc()
+            self.raw_Vm1_to_Pm1()
 
         except Exception as e: # hu ho...
             print(e)
@@ -327,9 +328,18 @@ class TWAdata():
         self._df['Prg'] = 10**(((2.1841*self._df['Prg_raw'] + 2.1301) + 61.09)/10)/1e3
         
     def raw_Tc_to_Tc(self):
+        '''
+        Process thermocouple raw data
+        '''
         self._df['TC1'] = 21.665 * self._df['TC1_raw'] -23.048
         self._df['TC2'] = 21.665 * self._df['TC2_raw'] -23.048 
         self._df['TC3'] = 21.665 * self._df['TC3_raw'] -23.048 
         
-        
-        
+    def raw_Vm1_to_Pm1(self):
+        '''
+        Vm1*32.113 - 30.531 : -> (A/B) in dB
+        33 dB: attenuator
+        -> gives Pm1 in Watt
+        '''
+        self._df['Pm1'] = 10**(((-10 -(self._df['Vm1_raw']*32.113 - 30.531)) + 33)/10)/1e3
+
