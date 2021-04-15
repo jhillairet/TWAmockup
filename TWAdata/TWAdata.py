@@ -64,6 +64,7 @@ class TWAdata():
             self.raw_vac_to_vac()
             self.raw_Piout_to_Piout()
             self.raw_Pgen_to_Pgen()
+            self.raw_Tc_to_Tc()
 
         except Exception as e: # hu ho...
             print(e)
@@ -272,11 +273,11 @@ class TWAdata():
         
         40.737*Vraw - 92.731: calibration AD8310
         42 dBm: attenuator (-19dB -20dB -3dB )
-        61 dB: Spinner coupler attenuation
+        60 dB: Spinner coupler attenuation
         the result is in dBm --> Power in Watts
         '''
         
-        self._df['Piout'] = 10**(((40.737*self._df['Piout_raw'] - 92.731) + 42 + 61) / 10)/1e3
+        self._df['Piout'] = 10**(((40.737*self._df['Piout_raw'] - 92.731) + 42 + 60) / 10)/1e3
         
     def raw_Pgen_to_Pgen(self):
         '''
@@ -288,3 +289,7 @@ class TWAdata():
         self._df['Pig'] = 10**(((2.154*self._df['Pig_raw'] + 2.5968) + 60.95)/10)/1e3
         self._df['Prg'] = 10**(((2.1841*self._df['Prg_raw'] + 2.1301) + 61.09)/10)/1e3
         
+    def raw_Tc_to_Tc(self):
+        self._df['TC1'] = 21.665 * self._df['TC1_raw'] -23.048
+        self._df['TC2'] = 21.665 * self._df['TC2_raw'] -23.048 
+        self._df['TC3'] = 21.665 * self._df['TC3_raw'] -23.048 
