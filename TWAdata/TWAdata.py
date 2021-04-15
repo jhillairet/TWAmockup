@@ -57,6 +57,7 @@ class TWAdata():
             self._df.set_index('time', inplace=True)
 
             # TODO post processing
+            self.raw_TOS_to_TOS()
 
         except Exception as e: # hu ho...
             print(e)
@@ -130,4 +131,16 @@ class TWAdata():
         cable_phase = phase[cable]['a'] * fMHz + phase[cable]['b']
         
         return (-cable_loss,cable_phase)
+        
+    def raw_TOS_to_TOS(self):
+        '''
+        calibration for TOS (AD8302)
+
+        Returns
+        -------
+        None.
+
+        '''
+        self._def['TOS'] = 32.824 * self._def['TOS_raw'] - 29.717
+
         
