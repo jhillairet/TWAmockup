@@ -21,6 +21,8 @@ class TWAdata():
         '''
         # raw data are store in an internal dictionnary
         self._raw_data = {}
+        
+        self.frequency_MHz = float(tdms_filename.split('_')[-1].split('.')[0].replace(',', '.').strip('M').strip('F'))
     
         try:
             print(f'Reading {tdms_filename} data... please wait...')
@@ -65,7 +67,7 @@ class TWAdata():
         '''
         TWAdata description
         '''
-        return 'TWA mockup data object. .df property contains: \n' + \
+        return f'TWA mockup data object ({self.frequency_MHz} MHz). .df property contains: \n' + \
             str(self.df.columns.to_list())
 
     @property
