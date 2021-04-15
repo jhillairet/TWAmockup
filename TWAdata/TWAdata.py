@@ -22,7 +22,7 @@ class TWAdata():
         # raw data are store in an internal dictionnary
         self._raw_data = {}
         
-        self.frequency_MHz = float(tdms_filename.split('_')[-1].split('.')[0].replace(',', '.').strip('M').strip('F'))
+        self.fMHz = float(tdms_filename.split('_')[-1].split('.')[0].replace(',', '.').strip('M').strip('F'))
     
         try:
             print(f'Reading {tdms_filename} data... please wait...')
@@ -58,10 +58,12 @@ class TWAdata():
             self._df['time'] = time_relative
             self._df.set_index('time', inplace=True)
 
-            # TODO add frequency
-            self.fMHz = 50
-            # TODO post processing
+            # Post processing
             self.raw_TOS_to_TOS()
+            self.raw_V_to_V()
+            self.raw_vac_to_vac()
+            self.raw_Piout_to_Piout()
+            self.raw_Pgen_to_Pgen()
 
         except Exception as e: # hu ho...
             print(e)
@@ -70,7 +72,7 @@ class TWAdata():
         '''
         TWAdata description
         '''
-        return f'TWA mockup data object ({self.frequency_MHz} MHz). .df property contains: \n' + \
+        return f'TWA mockup data object ({self.fMHz} MHz). .df property contains: \n' + \
             str(self.df.columns.to_list())
 
     @property
@@ -145,7 +147,7 @@ class TWAdata():
         None.
 
         '''
-        self._def['TOS'] = 32.824 * self._def['TOS_raw'] - 29.717
+        self._df['TOS'] = 32.824 * self._df['TOS_raw'] - 29.717
 
     def AD8310_calib(self,card,Vdc):
         '''
@@ -176,7 +178,7 @@ class TWAdata():
     
     def V_probe_calib(self,probe,fMHz):
         '''
-        provides the calibrated coefficient of the voltage probe
+        Provides the calibrated coefficient of the voltage probe
         expressed in kV/V.
 
         Parameters
@@ -189,7 +191,7 @@ class TWAdata():
         Returns
         -------
         kV_V : float
-            the voltage probe coefficient
+            the voltage probe coefficient in kV/V.
 
         '''
         probes = {'V1':297.662,
@@ -201,9 +203,9 @@ class TWAdata():
         
         return probes[probe]/fMHz
     
-    def dBm_to_Vrf(self,dBm):
+    def dBm_to_Vrf(self, dBm):
         '''
-        transform dBm in Vrf
+        Transform dBm in Vrf
 
         Parameters
         ----------
@@ -220,12 +222,7 @@ class TWAdata():
     
     def raw_V_to_V(self):
         '''
-        
-
-        Returns
-        -------
-        None.
-
+        Process the raw voltage signals
         '''
         card_stage = self.AD8310_calib('V1',self._df['V1_raw'])
         cable_stage = self.cable_calib('cable_1', self.fMHz)[0]
@@ -262,3 +259,32 @@ class TWAdata():
         probe_coeff = self.V_probe_calib('V6', self.fMHz)
         self._df['V6'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
     
+    def raw_vac_to_vac(self):
+        '''
+        Process the raw vacuum signals
+        '''
+        self._df['Vac1'] = 10**(1.667*self._df['Vac1_raw']-9.333)
+        self._df['Vac2'] = 10**(1.667*self._df['Vac2_raw']-9.333)
+        
+    def raw_Piout_to_Piout(self):
+        '''
+        Process the raw input power into the water load.
+        
+        40.737*Vraw - 92.731: calibration AD8310
+        42 dBm: attenuator (-19dB -20dB -3dB )
+        61 dB: Spinner coupler attenuation
+        the result is in dBm --> Power in Watts
+        '''
+        
+        self._df['Piout'] = 10**(((40.737*self._df['Piout_raw'] - 92.731) + 42 + 61) / 10)/1e3
+        
+    def raw_Pgen_to_Pgen(self):
+        '''
+        Process the generator input/reflected power raw data
+        
+        2.154
+        60.95 dB: coupler attenutation
+        '''
+        self._df['Pig'] = 10**(((2.154*self._df['Pig_raw'] + 2.5968) + 60.95)/10)/1e3
+        self._df['Prg'] = 10**(((2.1841*self._df['Prg_raw'] + 2.1301) + 61.09)/10)/1e3
+        
