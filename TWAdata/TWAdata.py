@@ -56,6 +56,7 @@ class TWAdata():
                 time_relative.append(idx * dt)
             self._df['time_absolute'] = time_absolute
             self._df['time'] = time_relative
+            self._df['fMHz'] = self.fMHz
             self._df.set_index('time', inplace=True)
 
             # Post processing
@@ -313,9 +314,10 @@ class TWAdata():
         42 dBm: attenuator (-19dB -20dB -3dB )
         60 dB: Spinner coupler attenuation
         the result is in dBm --> Power in Watts
+        0.5 dB: cable loss
         '''
         
-        self._df['Piout'] = 10**(((40.737*self._df['Piout_raw'] - 92.731) + 42 + 60) / 10)/1e3
+        self._df['Piout'] = 10**(((40.737*self._df['Piout_raw'] - 92.731) + 42 + 59 +0.5) / 10)/1e3
         
     def raw_Pgen_to_Pgen(self):
         '''
