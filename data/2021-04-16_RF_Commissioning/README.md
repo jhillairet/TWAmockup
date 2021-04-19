@@ -1,4 +1,4 @@
-# 2021-04-15 1st High RF Power in the TWA mockup
+# 2021-04-16 TWA mockup RF Tests
 
 | Time | Pin/duration | fMhz | Comment | 
 | :--: | :----------: | :--: | :-----: |
