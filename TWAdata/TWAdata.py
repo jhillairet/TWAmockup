@@ -189,14 +189,14 @@ class TWAdata():
         '''
         self._df['TOS'] = 32.824 * self._df['TOS_raw'] - 29.717
 
-    def AD8310_calib(self,card,Vdc):
+    def AD8310_calib(self, card, Vdc):
         '''
         provides the transformation Vdc => dBm for the AD8310 cards
 
         Parameters
         ----------
-        card : srt
-            one of the calibrated cards.
+        card : str
+            one of the calibrated cards ('V1' to 'V7')
         Vdc : float
             measured voltage.
 
@@ -206,17 +206,17 @@ class TWAdata():
             the Vdc value in dBm
 
         '''
-        cards={'V1':{'a':41.145,'b':-91.911},
-               'V2':{'a':40.699,'b':-91.764},
-               'V3':{'a':40.751,'b':-90.550},
-               'V4':{'a':41.516,'b':-93.958},
-               'V5':{'a':40.798,'b':-93.086},
-               'V6':{'a':41.110,'b':-93.305},
-               'V7':{'a':40.737,'b':-92.731},}
+        cards={'V1':{'a':41.127, 'b':-95.067},
+               'V2':{'a':40.667, 'b':-95.274},
+               'V3':{'a':40.780, 'b':-93.895},
+               'V4':{'a':41.578, 'b':-97.553},
+               'V5':{'a':40.933, 'b':-96.822},
+               'V6':{'a':41.155, 'b':-96.649},
+               'V7':{'a':40.851, 'b':-96.176},}
         
         return cards[card]['a'] * Vdc + cards[card]['b']
     
-    def V_probe_calib(self,probe,fMHz):
+    def V_probe_calib(self, probe, fMHz):
         '''
         Provides the calibrated coefficient of the voltage probe
         expressed in kV/V.
@@ -224,7 +224,7 @@ class TWAdata():
         Parameters
         ----------
         probe : str
-            one of the calibrated probes.
+            one of the calibrated probes ('V1' to 'V6')
         fMHz : float
             the frequency in [MHz].
 
@@ -263,38 +263,40 @@ class TWAdata():
     def raw_V_to_V(self):
         '''
         Process the raw voltage signals
+        
+        The result is a voltage in Volt
         '''
-        card_stage = self.AD8310_calib('V1',self._df['V1_raw'])
+        card_stage = self.AD8310_calib('V1', self._df['V1_raw'])
         cable_stage = self.cable_calib('cable_1', self.fMHz)[0]
         probe_coeff = self.V_probe_calib('V1', self.fMHz)
         self._df['V1'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
         
-        card_stage = self.AD8310_calib('V2',self._df['V2_raw'])
+        card_stage = self.AD8310_calib('V2', self._df['V2_raw'])
         cable_stage = self.cable_calib('cable_2', self.fMHz)[0]
         probe_coeff = self.V_probe_calib('V2', self.fMHz)
         self._df['V2'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
         
-        card_stage = self.AD8310_calib('V3',self._df['V3_raw'])
+        card_stage = self.AD8310_calib('V3', self._df['V3_raw'])
         cable_stage = self.cable_calib('cable_3', self.fMHz)[0]
         probe_coeff = self.V_probe_calib('V3', self.fMHz)
         self._df['V3'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
         
-        card_stage = self.AD8310_calib('V3',self._df['V3_raw'])
+        card_stage = self.AD8310_calib('V3', self._df['V3_raw'])
         cable_stage = self.cable_calib('cable_3', self.fMHz)[0]
         probe_coeff = self.V_probe_calib('V3', self.fMHz)
         self._df['V3'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
         
-        card_stage = self.AD8310_calib('V4',self._df['V4_raw'])
+        card_stage = self.AD8310_calib('V4', self._df['V4_raw'])
         cable_stage = self.cable_calib('cable_4', self.fMHz)[0]
         probe_coeff = self.V_probe_calib('V4', self.fMHz)
         self._df['V4'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
         
-        card_stage = self.AD8310_calib('V5',self._df['V5_raw'])
+        card_stage = self.AD8310_calib('V5', self._df['V5_raw'])
         cable_stage = self.cable_calib('cable_5', self.fMHz)[0]
         probe_coeff = self.V_probe_calib('V5', self.fMHz)
         self._df['V5'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
         
-        card_stage = self.AD8310_calib('V6',self._df['V6_raw'])
+        card_stage = self.AD8310_calib('V6', self._df['V6_raw'])
         cable_stage = self.cable_calib('cable_6', self.fMHz)[0]
         probe_coeff = self.V_probe_calib('V6', self.fMHz)
         self._df['V6'] = self.dBm_to_Vrf(card_stage + cable_stage + 20) * probe_coeff
@@ -302,6 +304,8 @@ class TWAdata():
     def raw_vac_to_vac(self):
         '''
         Process the raw vacuum signals
+        
+        The result is a pressure in Pascal
         '''
         self._df['Vac1'] = 10**(1.667*self._df['Vac1_raw']-9.333)
         self._df['Vac2'] = 10**(1.667*self._df['Vac2_raw']-9.333)
@@ -311,27 +315,62 @@ class TWAdata():
         Process the raw input power into the water load.
         
         40.737*Vraw - 92.731: calibration AD8310
-        42 dBm: attenuator (-19dB -20dB -3dB )
+        42 dBm: attenuator (-19.645dB -20dB -3dB )
         60 dB: Spinner coupler attenuation
-        the result is in dBm --> Power in Watts
         0.5 dB: cable loss
-        '''
         
-        self._df['Piout'] = 10**(((40.737*self._df['Piout_raw'] - 92.731) + 42 + 59 +0.5) / 10)/1e3
+        The result is in dBm --> Power in Watts
+        '''
+        cable_att_dB = self.cable_calib('cable_Pout_FWD', self.fMHz)[0]
+        Piout_dBm = self.AD8310_calib('V7', self._df['Piout_raw'])
+        self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + cable_att_dB) / 10)/1e3
         
     def raw_Pgen_to_Pgen(self):
         '''
         Process the generator input/reflected power raw data
         
-        2.154
-        60.95 dB: coupler attenutation
-        '''
-        self._df['Pig'] = 10**(((2.154*self._df['Pig_raw'] + 2.5968) + 60.95)/10)/1e3
-        self._df['Prg'] = 10**(((2.1841*self._df['Prg_raw'] + 2.1301) + 61.09)/10)/1e3
+        Electronic Cards:
+         * Vi -> dBm : A * Vi + B
+         * Vr -> dBm : A * Vr + B
+        coupler attenutation:
+         * Pi:  XX dB
+         * Pr:  YY dB
+        
+        The result is in dBm --> Power in Watts
+        
+        '''      
+        # Electronic card aquisition data from G.Lombard prev acquisition program
+        # Pi
+        #{2.1477,	1.0735, 	61.05}, # @ 48 MHz	
+		#{2.1494, 	1.6246, 	61.04}, # @ 53 MHz	
+		#{2.1513, 	2.0106, 	61.03},	# @ 55.5 MHz
+        #{2.1540, 	2.5968, 	61.00}, # @ 57 MHz	
+        #{2.1608, 	3.0142, 	60.97}, # @ 63 MHz	
+        # Pr
+        #{2.1802, 	1.2402, 	61.19},	# @ 48 MHz	  	
+        #{2.1838, 	1.6224, 	61.16}, # @ 53 MHz	  	
+        #{2.1853, 	1.7151, 	61.14}, # @ 55.5 MHz
+        #{2.1841, 	2.1701, 	61.12}, # @ 57 MHz	  	
+        #{2.1910, 	2.2478, 	61.09}, # @ 63 MHz	 
+        
+        # An additional 10 dB attenuator has been added the 19/04/2021
+        # to correct the saturation seen in generator power measurement before
+        if self.df['start_time'][0].date() >= np.datetime64('2021-04-19'):
+            add_att_Pi_dB = 9.85
+            add_att_Pr_dB = 9.87
+            print('Adding additional 10dB attenuator')
+        else:
+            add_att_Pi_dB = 0
+            add_att_Pr_dB = 0
+
+        self._df['Pig'] = 10**(((2.1513*self._df['Pig_raw'] + 2.0106) + 61.03 + add_att_Pi_dB)/10)/1e3
+        self._df['Prg'] = 10**(((2.1853*self._df['Prg_raw'] + 1.7151) + 61.14 + add_att_Pr_dB)/10)/1e3
         
     def raw_Tc_to_Tc(self):
         '''
         Process thermocouple raw data
+        
+        The result is in degree C
         '''
         self._df['TC1'] = 21.665 * self._df['TC1_raw'] -23.048
         self._df['TC2'] = 21.665 * self._df['TC2_raw'] -23.048 
@@ -341,7 +380,8 @@ class TWAdata():
         '''
         Vm1*32.113 - 30.531 : -> (A/B) in dB
         33 dB: attenuator
-        -> gives Pm1 in Watt
+        
+        The result is a power Pm1 in Watts
         '''
         self._df['Pm1'] = 10**(((-10 -(self._df['Vm1_raw']*32.113 - 30.531)) + 33)/10)/1e3
 
