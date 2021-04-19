@@ -66,7 +66,7 @@ class TWAdata():
             self.raw_Piout_to_Piout()
             self.raw_Pgen_to_Pgen()
             self.raw_Tc_to_Tc()
-            self.raw_Vm1_to_Pm1()
+            self.raw_Vm_to_Pm()
 
         except Exception as e: # hu ho...
             print(e)
@@ -376,12 +376,21 @@ class TWAdata():
         self._df['TC2'] = 21.665 * self._df['TC2_raw'] -23.048 
         self._df['TC3'] = 21.665 * self._df['TC3_raw'] -23.048 
         
-    def raw_Vm1_to_Pm1(self):
+    def raw_Vm_to_Pm(self):
         '''
         Vm1*32.113 - 30.531 : -> (A/B) in dB
         33 dB: attenuator
         
-        The result is a power Pm1 in Watts
+        The result is a power Pm in Watts
         '''
-        self._df['Pm1'] = 10**(((-10 -(self._df['Vm1_raw']*32.113 - 30.531)) + 33)/10)/1e3
-
+        if self.df['start_time'][0] < np.datetime64('2021-04-19 13:30:00'):
+            print('Current probe configuration with reference on channel 1 only (3dB splitter)')
+            self._df['Pm1'] = 10**(((-10 -(self._df['Vm1_raw']*32.113 - 30.531)) + 33)/10)/1e3
+        else:
+            print('Current probe configuration with common reference (no 3dB splitter)')
+            self._df['Pm1'] = 10**(((-10 -(self._df['Vm1_raw']*32.113 - 30.531)) + 30)/10)/1e3
+            self._df['Pm2'] = 10**(((-10 -(self._df['Vm2_raw']*32.113 - 30.531)) + 30)/10)/1e3
+            self._df['Pm3'] = 10**(((-10 -(self._df['Vm3_raw']*32.113 - 30.531)) + 30)/10)/1e3
+            self._df['Pm4'] = 10**(((-10 -(self._df['Vm4_raw']*32.113 - 30.531)) + 30)/10)/1e3
+            self._df['Pm5'] = 10**(((-10 -(self._df['Vm5_raw']*32.113 - 30.531)) + 30)/10)/1e3
+            self._df['Pm6'] = 10**(((-10 -(self._df['Vm6_raw']*32.113 - 30.531)) + 30)/10)/1e3
