@@ -104,7 +104,7 @@ class TWAdata():
         '''
         return self._raw_data
         
-    def cable_calib(self, cable, fMHz):
+    def cable_calib(self, cable: str, fMHz: float):
         '''
         Provides calibration coefficients for a cable.
         The coefficients are loss/gain and phase.
@@ -217,7 +217,7 @@ class TWAdata():
         
         return cards[card]['a'] * Vdc + cards[card]['b']
     
-    def V_probe_calib(self, probe, fMHz):
+    def V_probe_calib(self, probe: str, fMHz: float):
         '''
         Provides the calibrated coefficient of the voltage probe
         expressed in kV/V.
@@ -244,7 +244,7 @@ class TWAdata():
         
         return probes[probe]/fMHz
     
-    def dBm_to_Vrf(self, dBm):
+    def dBm_to_Vrf(self, dBm: float) -> float:
         '''
         Transform dBm in Vrf
 
