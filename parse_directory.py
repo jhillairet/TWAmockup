@@ -13,7 +13,7 @@ from TWAdata.TWAdata import TWAdata
 from glob import glob
 
 #%%
-tdms_files = glob('data/2021-04-16_RF_Commissioning/*.tdms')
+tdms_files = glob('data/2021-04-20_RF_Commissioning/*.tdms')
 
 df = pd.DataFrame()
 #%%
@@ -55,3 +55,17 @@ df.plot(x='time_absolute', y='TC3', color='C2', ax=ax)
 #%%
 fig, ax = plt.subplots()
 df.groupby('fMHz').mean().reset_index().plot(x='fMHz', y='Pig', kind='scatter')
+
+#%% Voltage vs forward power in the antenna
+with plt.style.context('seaborn'):
+    fig, ax = plt.subplots()
+    df['Pig_kW'] = df['Pig']/1e3
+    df.plot(x='Pig_kW', y='V1', kind='scatter', ax=ax, color='C0', alpha=0.5)
+    df.plot(x='Pig_kW', y='V2', kind='scatter', ax=ax, color='C1', alpha=0.5)
+    df.plot(x='Pig_kW', y='V3', kind='scatter', ax=ax, color='C2', alpha=0.5)
+    df.plot(x='Pig_kW', y='V4', kind='scatter', ax=ax, color='C3', alpha=0.5)
+    df.plot(x='Pig_kW', y='V5', kind='scatter', ax=ax, color='C4', alpha=0.5)
+    df.plot(x='Pig_kW', y='V6', kind='scatter', ax=ax, color='C5', alpha=0.5)
+    ax.set_xlabel('Forward Power [kW]')
+    ax.set_ylabel('Strap Voltage [kV]')
+    ax.legend([f'V{idx}' for idx in range(1,7)])
