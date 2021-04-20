@@ -60,7 +60,7 @@ class TWAdata():
             self._df.set_index('time', inplace=True)
 
             # Post processing
-            self.raw_TOS_to_TOS()
+            self.raw_TOS_to_RL()
             self.raw_V_to_V()
             self.raw_vac_to_vac()
             self.raw_Piout_to_Piout()
@@ -178,18 +178,19 @@ class TWAdata():
         
         return (-cable_loss,cable_phase)
         
-    def raw_TOS_to_TOS(self):
+    def raw_TOS_to_RL(self):
         '''
-        calibration for TOS (AD8302)
+        calibration for Return Loss (RL) at the antenna (AD8302)
+
 
         Returns
         -------
         None.
 
         '''
-        self._df['TOS'] = 32.824 * self._df['TOS_raw'] - 29.717
+        self._df['RL'] = 32.824 * self._df['TOS_raw'] - 29.717
 
-    def AD8310_calib(self, card, Vdc):
+    def AD8310_calib(self, card: str, Vdc: float):
         '''
         provides the transformation Vdc => dBm for the AD8310 cards
 
@@ -373,6 +374,8 @@ class TWAdata():
 
         self._df['Pig'] = 10**(((2.1513*self._df['Pig_raw'] + 2.0106) + 61.03 + add_att_Pi_dB)/10)/1e3
         self._df['Prg'] = 10**(((2.1853*self._df['Prg_raw'] + 1.7151) + 61.14 + add_att_Pr_dB)/10)/1e3
+        # Return Loss at generator
+        self._df['RLG'] = 10*np.log10(self._df['Prg']/self._df['Pig'])
         
     def raw_Tc_to_Tc(self):
         '''
