@@ -9,11 +9,8 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from TWAdata.TWAdata import TWAdata
 #%%
-# medium size
 filename='TWA_2021-04-19_14-17-43_UTC_F55,500000M'
 tdms_filename = 'data/2021-04-19_RF_Commissioning/'+filename+'.tdms'
-# # big size
-# tdms_filename = 'data/test_files/TWA_2021-04-14_13-56-06_UTC_F55,000000M.tdms'
 
 data = TWAdata(tdms_filename)
 
@@ -57,7 +54,7 @@ with plt.style.context('seaborn'):
     [a.grid(True) for a in ax]
     ax[3].grid(True, which='minor')
     ax[-1].set_xlabel('Time [s]')
-    ax[-1].set_xticklabels(['0','1','2','3','4','5','6','7'])
+    ax[-1].set_xticklabels(['0','5','10','15','20','25','30'])
     # ax[-1].set_xlim(1510511654.7286754, 2633350191.4752264)
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.05)

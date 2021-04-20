@@ -24,7 +24,15 @@ for tdms_file in tqdm(tdms_files):
 
 #%% TOS vs frequency
 fig, ax = plt.subplots()
-df.query('Pig>30e3 and Pig<60e3').groupby('fMHz').mean().reset_index().plot(x='fMHz', y='TOS', ax=ax, kind='scatter')
+df.query('Pig>30e3 and Pig<60e3').groupby('fMHz').mean().reset_index().plot(x='fMHz', y='RL', ax=ax, kind='scatter', label='RL')
+ax.set_ylabel('S11 [dB]')
+ax.set_title('S11 vs frequency - 50 kW shots')
+
+#%% ILG vs frequency
+fig, ax = plt.subplots()
+df.query('Pig>30e3 and Pig<60e3 and fMHz != 58.5').groupby('fMHz').mean().reset_index().plot(x='fMHz', y='RLG', ax=ax, label='Generator', kind='scatter', color='C0')
+df.query('Pig>30e3 and Pig<60e3 and fMHz != 58.5').groupby('fMHz').mean().reset_index().plot(x='fMHz', y='RL', ax=ax, label='Load', kind='scatter', color='C1')
+
 ax.set_ylabel('S11 [dB]')
 ax.set_title('S11 vs frequency - 50 kW shots')
 
