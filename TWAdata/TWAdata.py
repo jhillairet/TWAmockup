@@ -316,14 +316,21 @@ class TWAdata():
         
         40.737*Vraw - 92.731: calibration AD8310
         42 dBm: attenuator (-19.645dB -20dB -3dB )
-        60 dB: Spinner coupler attenuation
+        61 dB: Spinner coupler attenuation
         0.5 dB: cable loss
         
         The result is in dBm --> Power in Watts
         '''
         cable_att_dB = self.cable_calib('cable_Pout_FWD', self.fMHz)[0]
         Piout_dBm = self.AD8310_calib('V7', self._df['Piout_raw'])
-        self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + cable_att_dB) / 10)/1e3
+        
+        if self.df['start_time'][0] > np.datetime64('2021-04-20 11:55:00'):
+            # 2021/04/20: filters have been added to the forward and reflected 
+            # power at the antenna input
+            print('Adding filter to the loss chain')
+            self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + 1.24 + cable_att_dB) / 10)/1e3
+        else:
+            self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + cable_att_dB) / 10)/1e3
         
     def raw_Pgen_to_Pgen(self):
         '''
@@ -356,7 +363,8 @@ class TWAdata():
         # An additional 10 dB attenuator has been added the 19/04/2021
         # to correct the saturation seen in generator power measurement before
         if self.df['start_time'][0].date() >= np.datetime64('2021-04-19'):
-            add_att_Pi_dB = 9.85
+            # 2021-04-20 12-13-29: -0.66 dB has been added to match the power request value
+            add_att_Pi_dB = 9.85 - 0.66
             add_att_Pr_dB = 9.87
             print('Adding additional 10dB attenuator')
         else:
