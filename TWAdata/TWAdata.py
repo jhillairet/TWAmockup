@@ -64,6 +64,7 @@ class TWAdata():
             self.raw_V_to_V()
             self.raw_vac_to_vac()
             self.raw_Piout_to_Piout()
+            self.raw_Piin_to_Piin()
             self.raw_Pgen_to_Pgen()
             self.raw_Tc_to_Tc()
             self.raw_Vm_to_Pm()
@@ -213,7 +214,8 @@ class TWAdata():
                'V4':{'a':41.578, 'b':-97.553},
                'V5':{'a':40.933, 'b':-96.822},
                'V6':{'a':41.155, 'b':-96.649},
-               'V7':{'a':40.851, 'b':-96.176},}
+               'V7':{'a':40.851, 'b':-96.176},
+               'V8':{'a':41.389, 'b':-98.451},}
         
         return cards[card]['a'] * Vdc + cards[card]['b']
     
@@ -333,6 +335,30 @@ class TWAdata():
         else:
             self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + cable_att_dB) / 10)/1e3
         
+    def raw_Piin_to_Piin(self):
+        '''
+        Process the raw input power into the antenna.
+        
+        41.389*Vraw - 98.451: calibration AD8310
+        42 dBm: attenuator (-18.957dB att, -13dB att, -10dB splitter )
+        61 dB: Spinner coupler attenuation
+        0.5 dB: cable loss
+        0.55 dB: filter on 
+        
+        The result is in dBm --> Power in Watts
+        '''
+        cable_att_dB = self.cable_calib('cable_Pin_FWD', self.fMHz)[0]
+        Piin_dBm = self.AD8310_calib('V8', self._df['Piin_raw'])
+        
+        if self.df['start_time'][0] > np.datetime64('2021-04-21 07:00:00'):
+            # 2021/04/20: filters have been added to the forward and reflected 
+            # power at the antenna input
+            print('Adding Pin antenna')
+            self._df['Piin'] = 10**((Piin_dBm + 41.451 + 61 + 0.55 + cable_att_dB) / 10)/1e3
+        else:
+            self._df['Piin'] = 0 * self._df['Piin_raw']
+       
+        
     def raw_Pgen_to_Pgen(self):
         '''
         Process the generator input/reflected power raw data
@@ -365,15 +391,30 @@ class TWAdata():
         # to correct the saturation seen in generator power measurement before
         if self.df['start_time'][0].date() >= np.datetime64('2021-04-19'):
             # 2021-04-20 12-13-29: -0.66 dB has been added to match the power request value
-            add_att_Pi_dB = 9.85 - 0.66
-            add_att_Pr_dB = 9.87
-            print('Adding additional 10dB attenuator')
+            # add_att_Pi_dB = 9.85 - 0.66
+            # add_att_Pr_dB = 9.87
+            #print('Adding additional 10dB attenuator')
+            
+            # 2021-04-21 new calibration of the full chain
+            if self.df['start_time'][0] >= np.datetime64('2021-04-21 11:00:00'):
+                add_att_Pi_dB = 0 + 0.2
+                add_att_Pr_dB = 0 + 0.2
+            else:
+                add_att_Pi_dB = 0
+                add_att_Pr_dB = 0
+            print('New calibration Gen')
         else:
-            add_att_Pi_dB = 0
-            add_att_Pr_dB = 0
+            # before 2021-04-21
+            # add_att_Pi_dB = 0
+            # add_att_Pr_dB = 0
+            # 2021-04-21 new calibration of the full chain
+            add_att_Pi_dB = -(9.85 - 0.66)
+            add_att_Pr_dB = -9.87
 
-        self._df['Pig'] = 10**(((2.1513*self._df['Pig_raw'] + 2.0106) + 61.03 + add_att_Pi_dB)/10)/1e3
-        self._df['Prg'] = 10**(((2.1853*self._df['Prg_raw'] + 1.7151) + 61.14 + add_att_Pr_dB)/10)/1e3
+        # self._df['Pig'] = 10**(((2.1513*self._df['Pig_raw'] + 2.0106) + 61.03 + add_att_Pi_dB)/10)/1e3
+        # self._df['Prg'] = 10**(((2.1853*self._df['Prg_raw'] + 1.7151) + 61.14 + add_att_Pr_dB)/10)/1e3
+        self._df['Pig'] = 10**(((2.1412*self._df['Pig_raw'] + 72.836) + add_att_Pi_dB)/10)/1e3
+        self._df['Prg'] = 10**(((2.1819*self._df['Prg_raw'] + 73.239) + add_att_Pr_dB)/10)/1e3
         # Return Loss at generator
         self._df['RLG'] = 10*np.log10(self._df['Prg']/self._df['Pig'])
         
