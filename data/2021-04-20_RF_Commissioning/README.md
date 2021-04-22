@@ -38,8 +38,8 @@
 | 13-56-58 | 1000 kW | 55.5 MHz | 2s ramp 5s plateau - OK - RL is noisy |
 | 14-01-37 | 500 kW | 55.5 MHz | 2s ramp 5s plateau - OK - RL is noisy |
 | 14-35-04 | 500 kW | 55.5 MHz | 2s ramp 5s plateau - OK - RL signal is clean after screw/unscrew |
-| 14-37-15 | 1500 kW | 55.5 MHz | 2s ramp 5s plateau - OK |
-| 14-38-40 | 1750 kW | 55.5 MHz | 2s ramp 5s plateau - OK |
+| 14-37-15 | 1750 kW | 55.5 MHz | 2s ramp 3s plateau - OK |
+| 14-38-40 | 1000 kW | 55.5 MHz | 2s ramp 5s plateau - OK |
 | 14-44-11 | 1000 kW | 55.5 MHz | 2s ramp 20s plateau - OK |
 
 
