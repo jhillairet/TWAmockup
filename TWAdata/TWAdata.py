@@ -39,7 +39,11 @@ class TWAdata():
                     properties = channel.properties
                     # Access numpy array of data for channel:
                     self.raw_data[channel_name + '_raw'] = channel[:]
-                
+            
+            ## load calibration for filters
+            self._filter_calib=pd.read_csv('calibration_filtres_TWA.csv',sep=';',decimal=',')
+            print('Calibration for filters loaded')
+            
             ## time properties
             self._raw_data['start_time'] = properties['wf_start_time']    
             self._raw_data['time_step'] = properties['wf_increment']  # time step
@@ -322,6 +326,8 @@ class TWAdata():
         61 dB: Spinner coupler attenuation
         0.5 dB: cable loss
         
+        added filters on 2021-0-20
+        
         The result is in dBm --> Power in Watts
         '''
         cable_att_dB = self.cable_calib('cable_Pout_FWD', self.fMHz)[0]
@@ -331,7 +337,9 @@ class TWAdata():
             # 2021/04/20: filters have been added to the forward and reflected 
             # power at the antenna input
             print('Adding filter to the loss chain')
-            self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + 1.24 + cable_att_dB) / 10)/1e3
+            att_filter = self._filter_calib.query('Freq_MHz == {}'.format(self.fMHz))['OUT_FWD'].values[0]
+            print('Filter value @ {} : {}'.format(self.fMHz,att_filter))
+            self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + att_filter + cable_att_dB) / 10)/1e3
         else:
             self._df['Piout'] = 10**((Piout_dBm + 42.645 + 61 + cable_att_dB) / 10)/1e3
         
