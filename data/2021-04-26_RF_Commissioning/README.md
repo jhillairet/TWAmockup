@@ -89,13 +89,13 @@
 | 14-31-06 | 200 kW / 1s | 58.5 MHz | frequency scan at 50°C |
 | 14-32-51 | 200 kW / 1s | 58.0 MHz | frequency scan at 50°C |
 | :--: | :----------: | :--: | :-----: |
-| 14- | 500 kW / 1s | 55.5 MHz | OK |
-| 14- | 550 kW / 1s | 55.5 MHz | SHAD |
-| 14- | 600 kW / 1s | 55.5 MHz | OK |
-| 14- | 650 kW / 1s | 55.5 MHz | SHAD |
-| 14- | 650 kW / 1s | 55.5 MHz | SHAD |
-| 14- | 650 kW / 1s | 55.5 MHz | SHAD |
-| 14- | 650 kW / 1s | 55.5 MHz | SHAD |
+| 14-48-26 | 500 kW / 1s | 55.5 MHz | OK |
+| 14-48-41 | 550 kW / 1s | 55.5 MHz | SHAD |
+| 14-48-52 | 600 kW / 1s | 55.5 MHz | OK |
+| 14-49-02 | 650 kW / 1s | 55.5 MHz | SHAD |
+| 14-50-21 | 650 kW / 1s | 55.5 MHz | SHAD |
+| 14-50-31 | 650 kW / 1s | 55.5 MHz | SHAD |
+| 14-51-44 | 650 kW / 1s | 55.5 MHz | SHAD |
 | :--: | :----------: | :--: | :-----: |
 | 14-58-39 | 500 kW / 60s | 55.5 MHz | OK but 1 trip |
 | 14-58-39 | 500 kW / 60s | 55.5 MHz | OK super clean |
