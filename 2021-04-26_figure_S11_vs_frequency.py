@@ -27,9 +27,9 @@ for tdms_file in tqdm(tdms_files):
 
 #%% TOS vs frequency
 fig, ax = plt.subplots()
-df.query('Pig > 10e3').groupby('fMHz').mean().reset_index().plot(x='fMHz', y='RL', ax=ax, kind='scatter', label='RL')
+df.query('Pig > 10e3').groupby('fMHz').mean().reset_index().plot(x='fMHz', y='RL', ax=ax, kind='scatter', label='RL - 50 degC')
 ax.set_ylabel('S11 [dB]')
-ax.set_title('S11 vs frequency - 50 kW shots')
+ax.set_title('S11 vs frequency - 200 kW shots - 50 degC')
 
 fig.savefig('TWAmockup_s11_vs_f_50degC.png')
 
