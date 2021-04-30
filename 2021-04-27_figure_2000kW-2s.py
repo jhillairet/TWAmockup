@@ -17,14 +17,16 @@ data = TWAdata(tdms_filename)
 # title for graphs
 title = np.datetime_as_string(data._raw_data['start_time'])+' - '+str(data.fMHz)+'MHz'
 
-
+#%%
+# switch the index to seconds, nicer for figure!
+data.df.set_index('time_seconds', inplace=True)
 #%%
 # plot something
 with plt.style.context('seaborn'):
     
     fig, ax = plt.subplots(4,1, sharex=True)
     ax[0].set_title(title)
-    data.df['Pig_kW'] = data.df['Pig']/1e3
+    data.df['Pig_kW'] = data.df['Piin']/1e3
     data.df.plot(y='Pig_kW', ax=ax[0])
     ax[0].set_ylabel('[kW]')
     ax[0].legend(('RF Power',))
@@ -53,8 +55,8 @@ with plt.style.context('seaborn'):
     [a.grid(True) for a in ax]
     ax[3].grid(True, which='minor')
     ax[-1].set_xlabel('Time [s]')
-    ax[-1].set_xticklabels(['0','0.5','1','1.5','2','2.5','3','3.5', '4.0'])
-    ax[-1].set_xlim((501142338.34147763, 4264099648.1247435))  # fucking time base
+    ax[-1].set_xlim(0.5, 4.0)
+    
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.05)
     fig.savefig('TWAmockup_2000kW-2s.png', dpi=150)
@@ -73,8 +75,7 @@ with plt.style.context('seaborn'):
     
     ax.grid(True)
     ax.set_xlabel('Time [s]', fontsize=16)
-    ax.set_xticklabels(['0','0.5','1','1.5','2','2.5','3','3.5', '4.0'])
-    ax.set_xlim((501142338.34147763, 4264099648.1247435))  # fucking time base
+    ax.set_xlim(0.5, 4.0)
     fig.tight_layout()
     ax.tick_params(labelsize=14)
     fig.tight_layout()

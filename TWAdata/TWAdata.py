@@ -65,7 +65,8 @@ class TWAdata():
             self._df['time'] = time_relative
             self._df['fMHz'] = self.fMHz
             self._df.set_index('time', inplace=True)
-
+            self._df['time_seconds'] = self._df.index.total_seconds() # time in seconds (for plots)
+            
             # Post processing
             self.raw_TOS_to_RL()
             self.raw_V_to_V()
