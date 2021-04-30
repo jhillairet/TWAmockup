@@ -4,6 +4,9 @@ import pandas as pd
 from tqdm import tqdm
 from nptdms import TdmsFile
 
+# Allows copy/paste to clipboard using crtl+c command
+plt.rcParams['toolbar'] = 'toolmanager'
+
 class TWAdata():
     def __init__(self, tdms_filename:str):
         '''

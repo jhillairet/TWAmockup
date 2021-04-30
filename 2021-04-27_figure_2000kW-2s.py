@@ -58,3 +58,25 @@ with plt.style.context('seaborn'):
     fig.tight_layout()
     fig.subplots_adjust(hspace=0.05)
     fig.savefig('TWAmockup_2000kW-2s.png', dpi=150)
+    
+
+#%% figure with Power only (used in CEA Highlight)
+with plt.style.context('seaborn'):    
+    fig, ax = plt.subplots(1,1, sharex=True)
+    ax.set_title(title)
+    data.df['Pig_kW'] = data.df['Piin']/1e3
+    data.df.plot(y='Pig_kW', ax=ax)
+    ax.set_ylabel('[kW]', fontsize=16)
+    ax.legend(('RF Power',), fontsize=16)
+          
+    ax.set_title('TWA mockup - '+title)
+    
+    ax.grid(True)
+    ax.set_xlabel('Time [s]', fontsize=16)
+    ax.set_xticklabels(['0','0.5','1','1.5','2','2.5','3','3.5', '4.0'])
+    ax.set_xlim((501142338.34147763, 4264099648.1247435))  # fucking time base
+    fig.tight_layout()
+    ax.tick_params(labelsize=14)
+    fig.tight_layout()
+    # fig.savefig('TWAmockup_2000kW-2s.png', dpi=150)
+    
