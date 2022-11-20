@@ -458,3 +458,254 @@ class TWAdata():
             self._df['Pm4'] = 10**(((-10 -(self._df['Vm4_raw']*32.113 - 30.531)) + 30)/10)/1e3
             self._df['Pm5'] = 10**(((-10 -(self._df['Vm5_raw']*32.113 - 30.531)) + 30)/10)/1e3
             self._df['Pm6'] = 10**(((-10 -(self._df['Vm6_raw']*32.113 - 30.531)) + 30)/10)/1e3
+
+
+def find_shots_indices(array, threshold):
+    """
+    Returns the start and stop arrays indices corresponding to RF shot.
+
+    Parameters
+    ----------
+    array : numpy array
+        Array to threshold on
+    threshold : float
+        threshold to appy
+
+    Returns
+    -------
+    idx_starts : list of int
+    idx_stops : list of int
+    """
+    # indices of values above threshold
+    idx_thres = np.nonzero(array > threshold)[0]
+    if idx_thres.size > 0:  # not empty
+        # find indices where we change the RF shot   
+        idx_starts = np.append(idx_thres[0], idx_thres[1:][np.diff(idx_thres) > 1])
+        
+        idx_stops = np.append(idx_thres[0:-1][np.diff(idx_thres) > 1], idx_thres[-1])
+ 
+        return idx_starts, idx_stops
+    else:
+        return None, None
+
+def split_array(array, idx_starts, idx_stops):
+    """
+    Split an numerical array into sub-arrays according to start and stop indices.
+
+    Parameters
+    ----------
+    array : numpy array
+    idx_starts : list of int
+    idx_stops : list of int
+
+    Returns
+    -------
+    arrays : list of array
+    """
+    arrays = []    
+    for idx_start, idx_stop in zip(idx_starts, idx_stops):
+        arrays.append(array[idx_start:idx_stop])
+    return arrays
+
+def stats(subarray_list):
+    """
+    Extract the (mean, std, min, max) values of each subarrays
+
+    Parameters
+    ----------
+    subarray_list : list of numpy array
+
+    Returns
+    -------
+    stats : list of array
+
+    """
+    stats = []
+    for arr in subarray_list:
+        if arr.size > 0: # not empty
+            stats.append([np.mean(arr), np.std(arr), np.min(arr), np.max(arr)])
+
+    return stats
+
+def create_resumed_parameters(files):
+    """
+    Return the resumed parameters (mean, std, min, max) of resonator data.
+
+    Parameters
+    ----------
+    files : list
+        list of data files
+
+    Returns
+    -------
+    db : pd.DataFrame
+        resumed data.
+
+    """
+    V1_stats = []
+    V2_stats = []
+    V3_stats = []
+    V4_stats = []
+    V5_stats = []
+    V6_stats = []          
+    Piin_stats = []
+    Piout_stats = []
+    Pig_stats = []
+    Prg_stats = []
+    Vac1_stats = []
+    Vac2_stats = []
+    TC1_stats = []
+    TC2_stats = []
+    TC3_stats = []
+    freq_stats = []
+    Pm1_stats = []
+    Pm2_stats = []
+    Pm3_stats = []
+    Pm4_stats = []
+    Pm5_stats = []
+    Pm6_stats = []
+            
+    time_stats = []
+    time_cur_stats = []
+    pulse_lengths = []
+    freqs_stats = []
+    
+    for file in tqdm(files):
+        data = TWAdata(file)
+        # find start and stop times of each RF pulses
+        # smoothing data a bit to avoid counting breakdown as the stop of the pulse
+        idx_starts, idx_stops = find_shots_indices(data.df['V1'].ewm(span = 10).mean().values, 0.1)
+        
+        if idx_starts is not None:
+
+            times = split_array(data.df['time_absolute'].values, idx_starts, idx_stops)
+            subV1s = split_array(data.df['V1'].values, idx_starts, idx_stops)
+            subV2s = split_array(data.df['V2'].values, idx_starts, idx_stops)
+            subV3s = split_array(data.df['V3'].values, idx_starts, idx_stops)
+            subV4s = split_array(data.df['V4'].values, idx_starts, idx_stops)
+            subV5s = split_array(data.df['V5'].values, idx_starts, idx_stops)
+            subV6s = split_array(data.df['V6'].values, idx_starts, idx_stops)
+            
+            is_current_probe_data = True
+            try:
+                subPm1s = split_array(data.df['Pm1'].values, idx_starts, idx_stops)
+                subPm2s = split_array(data.df['Pm2'].values, idx_starts, idx_stops)
+                subPm3s = split_array(data.df['Pm3'].values, idx_starts, idx_stops)
+                subPm4s = split_array(data.df['Pm4'].values, idx_starts, idx_stops)
+                subPm5s = split_array(data.df['Pm5'].values, idx_starts, idx_stops)
+                subPm6s = split_array(data.df['Pm6'].values, idx_starts, idx_stops)
+            except KeyError as e:
+                is_current_probe_data = False
+
+            subPiin = split_array(data.df['Piin'].values, idx_starts, idx_stops)
+            subPiout = split_array(data.df['Piout'].values, idx_starts, idx_stops)
+            subPig = split_array(data.df['Pig'].values, idx_starts, idx_stops)
+            subPrg = split_array(data.df['Prg'].values, idx_starts, idx_stops)            
+            subVac1 = split_array(data.df['Vac1'].values, idx_starts, idx_stops)
+            subVac2 = split_array(data.df['Vac2'].values, idx_starts, idx_stops)        
+            subTC1 = split_array(data.df['TC1'].values, idx_starts, idx_stops)
+            subTC2 = split_array(data.df['TC2'].values, idx_starts, idx_stops)
+            subTC3 = split_array(data.df['TC3'].values, idx_starts, idx_stops)
+            
+            # calculate the pulse duration in seconds
+            durations = []
+            for idx, time in enumerate(idx_starts):
+                durations.append((data.df['time_absolute'][idx_stops][idx] - data.df['time_absolute'][idx_starts][idx]).total_seconds())
+                freqs_stats.append(data.fMHz)
+            pulse_lengths.append(durations)
+
+            # Append data
+            time_stats.append([t.flatten()[0] for t in times if t.size > 0])
+            
+            V1_stats.append(stats(subV1s))
+            V2_stats.append(stats(subV2s))
+            V3_stats.append(stats(subV3s))
+            V4_stats.append(stats(subV4s))
+            V5_stats.append(stats(subV5s))
+            V6_stats.append(stats(subV6s))
+
+            if is_current_probe_data:
+                Pm1_stats.append(stats(subPm1s))
+                Pm2_stats.append(stats(subPm2s))
+                Pm3_stats.append(stats(subPm3s))
+                Pm4_stats.append(stats(subPm4s))
+                Pm5_stats.append(stats(subPm5s))
+                Pm6_stats.append(stats(subPm6s))
+                time_cur_stats.append([t.flatten()[0] for t in times if t.size > 0])
+                
+            Piin_stats.append(stats(subPiin))
+            Piout_stats.append(stats(subPiout))
+            Pig_stats.append(stats(subPig))
+            Prg_stats.append(stats(subPrg))
+            Vac1_stats.append(stats(subVac1))
+            Vac2_stats.append(stats(subVac2))
+            TC1_stats.append(stats(subTC1))
+            TC2_stats.append(stats(subTC2))
+            TC3_stats.append(stats(subTC3))            
+
+    times_mmm = np.hstack(np.array(time_stats, dtype=object))
+    times_cur_mmm = np.hstack(np.array(time_cur_stats, dtype=object))
+    freqs = np.hstack(np.array(freqs_stats, dtype=object))
+    V1_mmm = np.vstack(np.array(V1_stats, dtype=object))
+    V2_mmm = np.vstack(np.array(V2_stats, dtype=object))
+    V3_mmm = np.vstack(np.array(V3_stats, dtype=object))
+    V4_mmm = np.vstack(np.array(V4_stats, dtype=object))
+    V5_mmm = np.vstack(np.array(V5_stats, dtype=object))
+    V6_mmm = np.vstack(np.array(V6_stats, dtype=object))
+
+    if is_current_probe_data:
+        Pm1_mmm = np.vstack(np.array(Pm1_stats, dtype=object))
+        Pm2_mmm = np.vstack(np.array(Pm2_stats, dtype=object))
+        Pm3_mmm = np.vstack(np.array(Pm3_stats, dtype=object))
+        Pm4_mmm = np.vstack(np.array(Pm4_stats, dtype=object))
+        Pm5_mmm = np.vstack(np.array(Pm5_stats, dtype=object))
+        Pm6_mmm = np.vstack(np.array(Pm6_stats, dtype=object))
+    
+    Pig_mmm = np.vstack(np.array(Pig_stats, dtype=object))
+    Prg_mmm = np.vstack(np.array(Prg_stats, dtype=object))
+    Piin_mmm = np.vstack(np.array(Piin_stats, dtype=object))
+    Piout_mmm = np.vstack(np.array(Piout_stats, dtype=object))
+    
+    Vac1_mmm = np.vstack(np.array(Vac1_stats, dtype=object))
+    Vac2_mmm = np.vstack(np.array(Vac2_stats, dtype=object))
+    
+    TC1_mmm = np.vstack(np.array(TC1_stats, dtype=object))
+    TC2_mmm = np.vstack(np.array(TC2_stats, dtype=object))
+    TC3_mmm = np.vstack(np.array(TC3_stats, dtype=object))
+    
+    pulse_lengths_mmm = np.hstack(np.array(pulse_lengths, dtype=object))
+    # remove zero lengths pulse
+    pulse_lengths_mmm = pulse_lengths_mmm[pulse_lengths_mmm != 0]
+        
+    db = pd.DataFrame(data={
+        'V1_mean': V1_mmm[:,0], 'V1_std': V1_mmm[:,1], 'V1_min': V1_mmm[:,2], 'V1_max': V1_mmm[:,3],
+        'V2_mean': V2_mmm[:,0], 'V2_std': V2_mmm[:,1], 'V2_min': V2_mmm[:,2], 'V2_max': V2_mmm[:,3],
+        'V3_mean': V3_mmm[:,0], 'V3_std': V3_mmm[:,1], 'V3_min': V3_mmm[:,2], 'V3_max': V3_mmm[:,3],
+        'V4_mean': V4_mmm[:,0], 'V4_std': V4_mmm[:,1], 'V4_min': V4_mmm[:,2], 'V4_max': V4_mmm[:,3],
+        'V5_mean': V5_mmm[:,0], 'V5_std': V5_mmm[:,1], 'V5_min': V5_mmm[:,2], 'V5_max': V5_mmm[:,3],
+        'V6_mean': V6_mmm[:,0], 'V6_std': V6_mmm[:,1], 'V6_min': V6_mmm[:,2], 'V6_max': V6_mmm[:,3],
+        'Pig_mean': Pig_mmm[:,0], 'Pig_std': Pig_mmm[:,1], 'Pig_min': Pig_mmm[:,2], 'Pig_max': Pig_mmm[:,3],
+        'Prg_mean': Prg_mmm[:,0], 'Prg_std': Prg_mmm[:,1], 'Prg_min': Prg_mmm[:,2], 'Prg_max': Prg_mmm[:,3],
+        'Piin_mean': Piin_mmm[:,0], 'Piin_std': Piin_mmm[:,1], 'Piin_min': Piin_mmm[:,2], 'Piin_max': Piin_mmm[:,3],
+        'Piout_mean': Piout_mmm[:,0], 'Piout_std': Piout_mmm[:,1], 'Piout_min': Piout_mmm[:,2], 'Piout_max': Piout_mmm[:,3],        
+        'Vac1_mean': Vac1_mmm[:,0], 'Vac1_std': Vac1_mmm[:,1], 'Vac1_min': Vac1_mmm[:,2], 'Vac1_max': Vac1_mmm[:,3],
+        'Vac2_mean': Vac2_mmm[:,0], 'Vac2_std': Vac2_mmm[:,1], 'Vac2_min': Vac2_mmm[:,2], 'Vac2_max': Vac2_mmm[:,3],
+        'TC1_mean': TC1_mmm[:,0], 'TC1_std': TC1_mmm[:,1], 'TC1_min': TC1_mmm[:,2], 'TC1_max': TC1_mmm[:,3],
+        'TC2_mean': TC2_mmm[:,0], 'TC2_std': TC2_mmm[:,1], 'TC2_min': TC2_mmm[:,2], 'TC2_max': TC2_mmm[:,3],
+        'TC3_mean': TC3_mmm[:,0], 'TC3_std': TC3_mmm[:,1], 'TC3_min': TC3_mmm[:,2], 'TC3_max': TC3_mmm[:,3],        
+        'pulse_length': pulse_lengths_mmm, 'freq': freqs
+        }, index=pd.DatetimeIndex(data=times_mmm, yearfirst=True))
+    if is_current_probe_data:
+        db_cur = pd.DataFrame(data={
+         'Pm1_mean': Pm1_mmm[:,0], 'Pm1_std': Pm1_mmm[:,1], 'Pm1_min': Pm1_mmm[:,2], 'Pm1_max': Pm1_mmm[:,3],
+         'Pm2_mean': Pm2_mmm[:,0], 'Pm2_std': Pm2_mmm[:,1], 'Pm2_min': Pm2_mmm[:,2], 'Pm2_max': Pm2_mmm[:,3],
+         'Pm3_mean': Pm3_mmm[:,0], 'Pm3_std': Pm3_mmm[:,1], 'Pm3_min': Pm3_mmm[:,2], 'Pm3_max': Pm3_mmm[:,3],
+         'Pm4_mean': Pm4_mmm[:,0], 'Pm4_std': Pm4_mmm[:,1], 'Pm4_min': Pm4_mmm[:,2], 'Pm4_max': Pm4_mmm[:,3],
+         'Pm5_mean': Pm5_mmm[:,0], 'Pm5_std': Pm5_mmm[:,1], 'Pm5_min': Pm5_mmm[:,2], 'Pm5_max': Pm5_mmm[:,3],
+         'Pm6_mean': Pm6_mmm[:,0], 'Pm6_std': Pm6_mmm[:,1], 'Pm6_min': Pm6_mmm[:,2], 'Pm6_max': Pm6_mmm[:,3],        
+        }, index=pd.DatetimeIndex(data=times_cur_mmm, yearfirst=True))
+
+        db = pd.concat([db, db_cur], axis=1)
+    # Create the date column from the index and create an index columns as well.
+    db = db.reset_index().rename(columns={'index':'date'}).reset_index()
+    return db
